@@ -1,0 +1,616 @@
+[
+    {
+        "id": "f8d63ec3410ad2bc",
+        "type": "tab",
+        "label": "ai-voice",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "56eaf35125db6bf2",
+        "type": "group",
+        "z": "f8d63ec3410ad2bc",
+        "name": "user data",
+        "style": {
+            "fill": "#e3f3d3",
+            "label": true
+        },
+        "nodes": [
+            "b6521e8507880da4",
+            "d7e94576efbfd5c2",
+            "58eecdc183db47e9",
+            "6b7df739cb6f9b1c",
+            "1765b817c7e30233",
+            "df39802ab326e85e",
+            "83b0d8f40f972eef",
+            "a2f52d772274dbd2",
+            "b5081a1d0af24625",
+            "27aeaca68a8c740f",
+            "176008b607fbc58d"
+        ],
+        "x": 14,
+        "y": 419,
+        "w": 612,
+        "h": 242
+    },
+    {
+        "id": "2fd1fd179e14a5ec",
+        "type": "telegram bot",
+        "botname": "{global.get('botCredential').botName}",
+        "usernames": "",
+        "chatids": "",
+        "baseapiurl": "",
+        "updatemode": "polling",
+        "pollinterval": "300",
+        "usesocks": false,
+        "sockshost": "",
+        "socksprotocol": "socks5",
+        "socksport": "6667",
+        "socksusername": "anonymous",
+        "sockspassword": "",
+        "bothost": "",
+        "botpath": "",
+        "localbotport": "8443",
+        "publicbotport": "8443",
+        "privatekey": "",
+        "certificate": "",
+        "useselfsignedcertificate": false,
+        "sslterminated": false,
+        "verboselogging": false
+    },
+    {
+        "id": "79c03d13a182b330",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "name": "Receive User Request",
+        "func": "const date = msg.originalMessage.date;\nmsg.typing = `typing${date}`;\nglobal.set(`typing${date}`, true);\nmsg.old = msg.payload;\n\nif (msg.originalMessage.text === '/start'){\n    const text = `Hello! How can I assist you?`;\n\n    msg.url = 'https://api.openai.com/v1/audio/speech';\n    msg.headers = {\n        'Content-Type': 'application/json',\n        'Authorization': `Bearer ${global.get('botCredential').openAIKey}`\n    };\n    msg.payload = {\n        model: \"tts-1\",\n        voice: global.get('botCredential').voice,\n        input: text,\n        response_format: 'opus'\n    }\n\n    return [msg,null];\n\n} else {\n    msg.payload = msg.payload.weblink\n    return [null,msg];\n}\n",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 140,
+        "wires": [
+            [
+                "d5a808d09dea547f",
+                "586389746fc2323f"
+            ],
+            [
+                "d5a808d09dea547f",
+                "c048b612f2e4f4af"
+            ]
+        ]
+    },
+    {
+        "id": "d2de40be72d35093",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "name": "Whisper AI Payload",
+        "func": "msg.url = `https://api.openai.com/v1/audio/transcriptions`;\n\nmsg.headers = {\n    \"Content-Type\": \"multipart/form-data\",\n    \"Authorization\": `Bearer ${global.get('botCredential').openAIKey}`,\n    \"Connection\": \"Keep-Alive\",\n    \"Transfer-Encoding\": \"chunked\"\n}\n\nmsg.payload = {\n    // file: msg.req.files[0].buffer,\n    model: 'whisper-1',\n    'temperature': 0.2,\n    \"file\": {\n        \"value\": msg.payload,\n        \"options\": {\n            \"filename\": 'file_5.mp3'\n        }\n    },\n\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 160,
+        "wires": [
+            [
+                "867556d2610c060d"
+            ]
+        ]
+    },
+    {
+        "id": "867556d2610c060d",
+        "type": "http request",
+        "z": "f8d63ec3410ad2bc",
+        "name": "Open AI API",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 970,
+        "y": 160,
+        "wires": [
+            [
+                "6da721d3d6562594"
+            ]
+        ]
+    },
+    {
+        "id": "6da721d3d6562594",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "name": "GPT 3.5",
+        "func": "msg.url = 'https://api.openai.com/v1/chat/completions';\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Authorization': `Bearer ${global.get('botCredential').openAIKey}`\n};\n\nmsg.payload = {\n    \"model\": global.get('botCredential').chatVersion,\n    \"temperature\": 0.5,\n    \"messages\": [\n        {\n            \"role\": \"system\", \"content\": `You are a smart assistant who writes an answer to a question. Please write an answer according to the question`\n        },\n        {\n            \"role\": \"user\", \"content\": \"Question: \" + msg.payload.text\n        }\n    ]\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1120,
+        "y": 160,
+        "wires": [
+            [
+                "abb5d864ea1c4139"
+            ]
+        ]
+    },
+    {
+        "id": "abb5d864ea1c4139",
+        "type": "http request",
+        "z": "f8d63ec3410ad2bc",
+        "name": "Open AI API",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1270,
+        "y": 160,
+        "wires": [
+            [
+                "ccaaf00ebcadd3c3"
+            ]
+        ]
+    },
+    {
+        "id": "ccaaf00ebcadd3c3",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "name": "Prepare Text for Audio",
+        "func": "const text = msg.payload.choices[0].message.content;\n\nmsg.url = 'https://api.openai.com/v1/audio/speech';\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Authorization': `Bearer ${global.get('botCredential').openAIKey}`\n};\n\nmsg.payload = {\n  \n    model: \"tts-1\",\n    voice: global.get('botCredential').voice,\n    input: text,\n    response_format: 'opus'\n}\n// global.set(msg.typing, false)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1460,
+        "y": 160,
+        "wires": [
+            [
+                "586389746fc2323f"
+            ]
+        ]
+    },
+    {
+        "id": "b2c9d7c838834677",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "name": "User Answer Message",
+        "func": "msg.payload = {\n    content: Buffer.from(msg.payload),\n    type: \"voice\",\n    chatId: msg.old.chatId\n}\nglobal.set(msg.typing, false)\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1820,
+        "y": 120,
+        "wires": [
+            [
+                "75ed8acbc0660d55"
+            ]
+        ]
+    },
+    {
+        "id": "c3c2b5d0bff85e2b",
+        "type": "telegram receiver",
+        "z": "f8d63ec3410ad2bc",
+        "name": "",
+        "bot": "2fd1fd179e14a5ec",
+        "saveDataDir": "",
+        "filterCommands": false,
+        "x": 120,
+        "y": 160,
+        "wires": [
+            [
+                "79c03d13a182b330"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "75ed8acbc0660d55",
+        "type": "telegram sender",
+        "z": "f8d63ec3410ad2bc",
+        "name": "",
+        "bot": "2fd1fd179e14a5ec",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 2020,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c048b612f2e4f4af",
+        "type": "ffmpeg-conversion",
+        "z": "f8d63ec3410ad2bc",
+        "name": "",
+        "format": "mp3",
+        "audiochannels": "mono",
+        "x": 590,
+        "y": 160,
+        "wires": [
+            [
+                "d2de40be72d35093"
+            ]
+        ]
+    },
+    {
+        "id": "b7ab102cf9517aa7",
+        "type": "http in",
+        "z": "f8d63ec3410ad2bc",
+        "name": "",
+        "url": "/css",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 100,
+        "y": 40,
+        "wires": [
+            [
+                "ec25cd2e1b3a4c03"
+            ]
+        ]
+    },
+    {
+        "id": "bd563a0724955d05",
+        "type": "http response",
+        "z": "f8d63ec3410ad2bc",
+        "name": "",
+        "statusCode": "",
+        "headers": {
+            "content-type": "text/css"
+        },
+        "x": 430,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "ec25cd2e1b3a4c03",
+        "type": "template",
+        "z": "f8d63ec3410ad2bc",
+        "name": "customCSS",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "css",
+        "syntax": "mustache",
+        "template": "\n.title .bp3-ui-text {\n  cursor: default !important;\n  font-size: clamp(20px, 2.3vw, 50px) !important; \n}\n\n.bp3-input, .select-button {\n    border-radius: 5px !important;\n}\n\n.main_container {\nbackground-image: linear-gradient(180deg, #C3FBF9 25%, #ffffff 100%) !important;\nheight: 80vh !important;\ntop: 50% !important;\nleft: 50% !important;\ntransform: translate(-50%, -50%) !important;\nborder-radius: 10px !important;\npadding: 0 !important;\n}\n\n.action_btn span{\n    color: #FFFFFF !important;\n}\n\n.bot_image > div > div > div > div > div > div > div {\n    animation: float 20s linear 0s infinite normal none;\n    transform-origin: 50% 50%;\n    z-index: 1 !important;\n}\n\n@keyframes float {\n    0%, 100% {\n        transform: translateX(0%) translateY(0%);\n    }\n\n    15% {\n        transform: translateX(-30px) translateY(-18px) rotate(4deg);\n    }\n\n    30% {\n        transform: translateX(15px) translateY(15px) rotate(-4deg);\n    }\n\n    45% {\n        transform: translateX(-15px) translateY(-10px) rotate(-3.6deg);\n    }\n\n    60% {\n        transform: translateX(9px) translateY(15px) rotate(-2.4deg);\n    }\n\n    75% {\n        transform: translateX(-6px) translateY(-16px) rotate(1.2deg);\n    }\n}\n\n\n",
+        "output": "str",
+        "x": 270,
+        "y": 40,
+        "wires": [
+            [
+                "bd563a0724955d05"
+            ]
+        ]
+    },
+    {
+        "id": "b6521e8507880da4",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "set global",
+        "func": "const data = msg.payload;\n\nlet process_env = {\n    \n    \"botName\": data.botName ? data.botName.trim() : '',\n    \"botToken\": data.botToken ? data.botToken.trim() : '',\n    \"openAIKey\": data.openAIKey ? data.openAIKey.trim() : '',\n    \"chatVersion\": data.chatVersion ? data.chatVersion.trim() : '',\n    \"voice\": data.voice ? data.voice.trim() : '',\n}\n\nglobal.set(\"botCredential\", process_env);\n\nmsg.payload={\n    \"flying\":true\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 520,
+        "wires": [
+            [
+                "58eecdc183db47e9"
+            ]
+        ]
+    },
+    {
+        "id": "d7e94576efbfd5c2",
+        "type": "http in",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "",
+        "url": "/createBot",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 540,
+        "wires": [
+            [
+                "6b7df739cb6f9b1c",
+                "b6521e8507880da4"
+            ]
+        ]
+    },
+    {
+        "id": "586389746fc2323f",
+        "type": "http request",
+        "z": "f8d63ec3410ad2bc",
+        "name": "Open AI API",
+        "method": "POST",
+        "ret": "bin",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1630,
+        "y": 120,
+        "wires": [
+            [
+                "b2c9d7c838834677"
+            ]
+        ]
+    },
+    {
+        "id": "58eecdc183db47e9",
+        "type": "http response",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 490,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "8c6ccfa9fb0dc683",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "name": "action",
+        "func": "msg.payload={\n    chatId:msg.old.chatId,\n    type: 'action',\n    content:'record_audio'\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 230,
+        "y": 280,
+        "wires": [
+            [
+                "d00c9c34dcd08ad3"
+            ]
+        ]
+    },
+    {
+        "id": "5eba6bc9d342ca0f",
+        "type": "delay",
+        "z": "f8d63ec3410ad2bc",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "3",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 540,
+        "y": 280,
+        "wires": [
+            [
+                "d5a808d09dea547f"
+            ]
+        ]
+    },
+    {
+        "id": "d5a808d09dea547f",
+        "type": "while-loop",
+        "z": "f8d63ec3410ad2bc",
+        "name": "loop",
+        "condi": "global.get(`${msg.typing}`) === true",
+        "limit": false,
+        "limitTime": "100",
+        "time": "counter",
+        "timeType": "msg",
+        "x": 310,
+        "y": 220,
+        "wires": [
+            [],
+            [
+                "8c6ccfa9fb0dc683"
+            ]
+        ]
+    },
+    {
+        "id": "d00c9c34dcd08ad3",
+        "type": "telegram sender",
+        "z": "f8d63ec3410ad2bc",
+        "name": "",
+        "bot": "2fd1fd179e14a5ec",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 380,
+        "y": 280,
+        "wires": [
+            [
+                "5eba6bc9d342ca0f"
+            ]
+        ]
+    },
+    {
+        "id": "6b7df739cb6f9b1c",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "folder content",
+        "func": "\nconst data = msg.payload;\n\nmsg.payload = {\n    botName: data.botName ? data.botName.trim() : '',\n    botToken: data.botToken ? data.botToken.trim() : '',\n    openAIKey: data.openAIKey ? data.openAIKey.trim() : '',\n    chatVersion: data.chatVersion ? data.chatVersion.trim() : '',\n    voice: data.voice ? data.voice.trim() : '',\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 560,
+        "wires": [
+            [
+                "1765b817c7e30233"
+            ]
+        ]
+    },
+    {
+        "id": "1765b817c7e30233",
+        "type": "file",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "write file",
+        "filename": "/data/credentials/user.txt",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 500,
+        "y": 560,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "df39802ab326e85e",
+        "type": "inject",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "5",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 460,
+        "wires": [
+            [
+                "83b0d8f40f972eef"
+            ]
+        ]
+    },
+    {
+        "id": "83b0d8f40f972eef",
+        "type": "file in",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "read file",
+        "filename": "/data/credentials/user.txt",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 320,
+        "y": 460,
+        "wires": [
+            [
+                "a2f52d772274dbd2"
+            ]
+        ]
+    },
+    {
+        "id": "a2f52d772274dbd2",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "update global",
+        "func": "\nconst userData = JSON.parse(msg.payload)\n\nglobal.set(\"botCredential\", userData)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b5081a1d0af24625",
+        "type": "function",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "ENV",
+        "func": "\nmsg.payload = {\n    botName: global.get(\"botCredential\")?.botName ? global.get(\"botCredential\").botName : \"\",\n    botToken: global.get(\"botCredential\")?.botToken ? global.get(\"botCredential\").botToken : \"\",\n    openAIKey: global.get(\"botCredential\")?.openAIKey ? global.get(\"botCredential\").openAIKey : \"\",\n    chatVersion: global.get(\"botCredential\")?.chatVersion ? global.get(\"botCredential\").chatVersion : \"\",\n    voice: global.get(\"botCredential\")?.voice ? global.get(\"botCredential\").voice : \"\",\n    flying: true\n}\n\n\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 620,
+        "wires": [
+            [
+                "176008b607fbc58d"
+            ]
+        ]
+    },
+    {
+        "id": "27aeaca68a8c740f",
+        "type": "http in",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "",
+        "url": "/getCredentials",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 620,
+        "wires": [
+            [
+                "b5081a1d0af24625"
+            ]
+        ]
+    },
+    {
+        "id": "176008b607fbc58d",
+        "type": "http response",
+        "z": "f8d63ec3410ad2bc",
+        "g": "56eaf35125db6bf2",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 490,
+        "y": 620,
+        "wires": []
+    }
+]

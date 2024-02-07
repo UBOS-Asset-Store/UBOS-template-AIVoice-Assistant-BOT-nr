@@ -1,0 +1,7 @@
+{
+    "2fd1fd179e14a5ec": {
+        "token": "{global.get('botCredential').botToken}"
+    },
+    "586389746fc2323f": {},
+    "abb5d864ea1c4139": {}
+}
