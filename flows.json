@@ -569,7 +569,7 @@
         "z": "f8d63ec3410ad2bc",
         "g": "56eaf35125db6bf2",
         "name": "ENV",
-        "func": "\nmsg.payload = {\n    botName: global.get(\"botCredential\")?.botName ? global.get(\"botCredential\").botName : \"\",\n    botToken: global.get(\"botCredential\")?.botToken ? global.get(\"botCredential\").botToken : \"\",\n    openAIKey: global.get(\"botCredential\")?.openAIKey ? global.get(\"botCredential\").openAIKey : \"\",\n    chatVersion: global.get(\"botCredential\")?.chatVersion ? global.get(\"botCredential\").chatVersion : \"\",\n    voice: global.get(\"botCredential\")?.voice ? global.get(\"botCredential\").voice : \"\",\n    flying: true\n}\n\n\n\nreturn msg;\n",
+        "func": "\nmsg.payload = {\n    botName: global.get(\"botCredential\")?.botName ? global.get(\"botCredential\").botName : \"\",\n    botToken: global.get(\"botCredential\")?.botToken ? global.get(\"botCredential\").botToken : \"\",\n    openAIKey: global.get(\"botCredential\")?.openAIKey ? global.get(\"botCredential\").openAIKey : \"\",\n    chatVersion: global.get(\"botCredential\")?.chatVersion ? global.get(\"botCredential\").chatVersion : \"\",\n    voice: global.get(\"botCredential\")?.voice ? global.get(\"botCredential\").voice : \"\",\n    flying: global.get(\"botCredential\")?.botName ? true : false\n}\n\n\n\nreturn msg;\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
