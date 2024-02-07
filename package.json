@@ -2,7 +2,11 @@
     "name": "UBOS-template-AIVoice-Assistant-BOT-nr",
     "description": "A Node-RED Project",
     "version": "0.0.1",
-    "dependencies": {},
+    "dependencies": {
+        "node-red-contrib-loop-processing": "0.5.1",
+        "node-red-contrib-media-utils": "0.0.8",
+        "node-red-contrib-telegrambot": "15.1.9"
+    },
     "node-red": {
         "settings": {
             "flowFile": "flows.json",
